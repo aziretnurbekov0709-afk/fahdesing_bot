@@ -8,6 +8,17 @@ ADMIN_ID = 6498779131
 
 reply_dict = {}
 
+# 🖼 твои работы (file_id)
+WORKS = [
+    ("AgACAgIAAxkBAAIBA2m6_cw-2NWOdv9-himqbG36O9FlAALqFmsbf4jQSUtF5w_1LyAEAQADAgADeQADOgQ", "🔥 Дизайн 1\n💰 300₽"),
+    ("AgACAgIAAxkBAAIBBGm6_cyN1YOecsfJNhBb8OlIlOUmAAI_G2sbV4LZSTt9tDlB6HutAQADAgADeQADOgQ", "🔥 Дизайн 2\n💰 400₽"),
+    ("AgACAgIAAxkBAAIBBWm6_czZu0w68bV1MyHgWxB7Kk66AAJBG2sbV4LZSeER3otALILhAQADAgADeQADOgQ", "🔥 Дизайн 3\n💰 500₽"),
+    ("AgACAgIAAxkBAAIBBmm6_cxR42RcIFZNHSCsv9qi8lssAAK1E2sb7SjJSbVbPCh9maHaAQADAgADeQADOgQ", "🔥 Дизайн 4\n💰 350₽"),
+    ("AgACAgIAAxkBAAIBB2m6_czleDEqB1UCF7pjvDDQbsfEAAJCG2sbV4LZSeX-FxaWqgV-AQADAgADeQADOgQ", "🔥 Дизайн 5\n💰 450₽"),
+    ("AgACAgIAAxkBAAIBCGm6_czT5XltjwvGbnez4Yi1Lq_5AAJrE2sbX7bIScCcPmXjejJcAQADAgADeQADOgQ", "🔥 Дизайн 6\n💰 600₽"),
+]
+
+
 # 🚀 старт
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -76,13 +87,25 @@ def process_help(message):
     bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
 
 
-# 🖼 наши работы (ПОКА ПУСТО)
+# 🖼 наши работы (через Telegram)
 @bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
 def portfolio(message):
-    bot.send_message(message.chat.id, "Скоро добавим работы 🔥")
+    for i, (file_id, text) in enumerate(WORKS):
+        markup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton("🎨 Заказать такой", callback_data=f"order_{i}")
+        markup.add(btn)
+
+        bot.send_photo(message.chat.id, file_id, caption=text, reply_markup=markup)
 
 
-# 🔘 кнопка "Ответить"
+# 🎨 заказ с портфолио
+@bot.callback_query_handler(func=lambda call: call.data.startswith("order_"))
+def order_from_portfolio(call):
+    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали заказа:")
+    bot.register_next_step_handler(msg, process_order)
+
+
+# 🔘 ответ админу
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
 def callback_reply(call):
     if call.from_user.id != ADMIN_ID:
@@ -103,13 +126,6 @@ def send_reply(message):
     bot.send_message(message.chat.id, "✅ Ответ отправлен")
 
     del reply_dict[message.from_user.id]
-
-
-# 🔥 ЛОВИМ PHOTO ID
-@bot.message_handler(content_types=['photo'])
-def get_photo_id(message):
-    file_id = message.photo[-1].file_id
-    bot.send_message(message.chat.id, f"ID фото:\n{file_id}")
 
 
 # 🚀 запуск
