@@ -8,7 +8,7 @@ bot = telebot.TeleBot(API_TOKEN)
 ADMINS = [6498779131]
 
 # 🎨 дизайнеры (очередь)
-designers = [6498779131, 7299702298, 6034730945, 6498779131]
+designers = [6498779131]
 
 queue_index = 0
 
