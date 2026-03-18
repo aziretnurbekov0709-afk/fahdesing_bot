@@ -1,58 +1,65 @@
-import logging
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.utils import executor
+[18.03.2026 23:25] 𝘼𝙯𝙖 𝘿𝙚𝙨𝙞𝙜𝙣: pyTelegramBotAPI
+[19.03.2026 00:39] 𝘼𝙯𝙖 𝘿𝙚𝙨𝙞𝙜𝙣: import telebot
 
-API_TOKEN = "8739134919:AAGsQBLIStXsdOktWwXc9BB1_pKhsUdxswQ"
+API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 
-# 👇 айди админов
+bot = telebot.TeleBot(API_TOKEN)
+
+# 👑 админы
 ADMINS = [6498779131, 7299702298, 6034730945]
 
-logging.basicConfig(level=logging.INFO)
+# 🎨 дизайнеры (очередь)
+designers = [6498779131, 7299702298, 6034730945, 6498779131]
 
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+queue_index = 0
 
-# 🔘 КНОПКИ
-kb = ReplyKeyboardMarkup(resize_keyboard=True)
-kb.add(KeyboardButton("🎨 Заказать дизайн"))
-kb.add(KeyboardButton("💬 Помощь"))
 
-# 🚀 СТАРТ
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
-    await message.answer(
-        "🔥 Добро пожаловать в FAHH DESIGNERS!\nВыбери действие:",
-        reply_markup=kb
-    )
+# 🚀 старт
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = telebot.types.KeyboardButton("🎨 Заказать дизайн")
+    btn2 = telebot.types.KeyboardButton("📞 Помощь")
+    markup.add(btn1, btn2)
 
-# 🎨 ЗАКАЗ
-@dp.message_handler(text="🎨 Заказать дизайн")
-async def design(message: types.Message):
-    await message.answer("✍️ Напиши, что тебе нужно (аватарка, превью и т.д.)")
+    bot.send_message(message.chat.id, "Добро пожаловать в FAH DESIGNERS 👑", reply_markup=markup)
 
-# 💬 ПОМОЩЬ
-@dp.message_handler(text="💬 Помощь")
-async def help(message: types.Message):
-    await message.answer("Я помогу тебе создать дизайн 🎨\nПросто напиши, что нужно!")
 
-# 📩 ЛОВИМ ВСЕ СООБЩЕНИЯ
-@dp.message_handler()
-async def all_messages(message: types.Message):
-    text = message.text
+# 🎨 заказ
+@bot.message_handler(func=lambda message: message.text == "🎨 Заказать дизайн")
+def order(message):
+    msg = bot.send_message(message.chat.id, "Опиши заказ:")
+    bot.register_next_step_handler(msg, process_order)
 
-    # отправка админам
-    for admin_id in ADMINS:
-        await bot.send_message(
-            admin_id,
-            f"📩 Новая заявка!\n\n"
-            f"👤 @{message.from_user.username}\n"
-            f"🆔 {message.from_user.id}\n\n"
-            f"💬 {text}"
-        )
 
-    await message.answer("✅ Заявка отправлена! Ожидай ответа 🙌")
+def process_order(message):
+    global queue_index
 
-# ▶️ ЗАПУСК
-if name == 'main':
-    executor.start_polling(dp, skip_updates=True)
+    designer_id = designers[queue_index]
+
+    # отправка дизайнеру
+    bot.send_message(designer_id, f"📥 Новый заказ:\n\n{message.text}\n\nОт: {message.from_user.id}")
+
+    # ответ клиенту
+    bot.send_message(message.chat.id, "✅ Заказ отправлен дизайнеру!")
+
+    # следующий дизайнер
+    queue_index += 1
+    if queue_index >= len(designers):
+        queue_index = 0
+
+
+# 📞 помощь
+@bot.message_handler(func=lambda message: message.text == "📞 Помощь")
+def help_msg(message):
+    bot.send_message(message.chat.id, "Напиши администратору: @fahdesing_bot")
+
+
+# 🔁 эхо (на всякий)
+@bot.message_handler(func=lambda message: True)
+def echo(message):
+    bot.send_message(message.chat.id, "Выбери кнопку 👇")
+
+
+# 🔥 запуск
+bot.infinity_polling()
