@@ -3,7 +3,7 @@ import telebot
 API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 bot = telebot.TeleBot(API_TOKEN)
 
-# 👑 только 1 админ
+# 👑 админ
 ADMIN_ID = 6498779131
 
 
@@ -25,11 +25,10 @@ def order(message):
 
 def process_order(message):
     user = message.from_user
-
     username = f"@{user.username}" if user.username else "Без ника"
 
     text = f"""
-📥 Новый заказ!
+📥 Новый ЗАКАЗ!
 
 👤 Ник: {username}
 🆔 ID: {user.id}
@@ -37,16 +36,43 @@ def process_order(message):
 📝 Заказ:
 {message.text}
 
-👉 Чтобы ответить напиши:
+👉 Ответить:
 /reply {user.id} текст
 """
 
     bot.send_message(ADMIN_ID, text)
+    bot.send_message(message.chat.id, "✅ Заказ отправлен!")
 
-    bot.send_message(message.chat.id, "✅ Заказ отправлен админу!")
+
+# 📞 помощь (ТЕПЕРЬ КАК ЗАКАЗ)
+@bot.message_handler(func=lambda m: m.text == "📞 Помощь")
+def help_request(message):
+    msg = bot.send_message(message.chat.id, "Напиши свой вопрос:")
+    bot.register_next_step_handler(msg, process_help)
 
 
-# 💬 ответ от админа
+def process_help(message):
+    user = message.from_user
+    username = f"@{user.username}" if user.username else "Без ника"
+
+    text = f"""
+📞 НОВОЕ ОБРАЩЕНИЕ!
+
+👤 Ник: {username}
+🆔 ID: {user.id}
+
+💬 Сообщение:
+{message.text}
+
+👉 Ответить:
+/reply {user.id} текст
+"""
+
+    bot.send_message(ADMIN_ID, text)
+    bot.send_message(message.chat.id, "✅ Сообщение отправлено админу!")
+
+
+# 💬 ответ админа
 @bot.message_handler(commands=['reply'])
 def reply_to_user(message):
     if message.from_user.id != ADMIN_ID:
@@ -62,12 +88,6 @@ def reply_to_user(message):
 
     except:
         bot.send_message(message.chat.id, "❌ Пример: /reply 123456789 текст")
-
-
-# 📞 помощь
-@bot.message_handler(func=lambda m: m.text == "📞 Помощь")
-def help_msg(message):
-    bot.send_message(message.chat.id, "Напиши сюда и тебе ответят 👇")
 
 
 # 🔥 запуск
