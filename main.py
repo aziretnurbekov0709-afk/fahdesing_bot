@@ -76,13 +76,13 @@ def process_help(message):
     bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
 
 
-# 🖼 наши работы (ПОКА ПУСТО)
+# 🖼 пока заглушка
 @bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
 def portfolio(message):
     bot.send_message(message.chat.id, "Скоро добавим работы 🔥")
 
 
-# 🔘 кнопка "Ответить"
+# 🔘 ответ админу
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
 def callback_reply(call):
     if call.from_user.id != ADMIN_ID:
@@ -105,7 +105,7 @@ def send_reply(message):
     del reply_dict[message.from_user.id]
 
 
-# 🔥 ЛОВИМ PHOTO ID
+# 🔥 ПОЛУЧЕНИЕ PHOTO ID (ВАЖНО)
 @bot.message_handler(content_types=['photo'])
 def get_photo_id(message):
     file_id = message.photo[-1].file_id
