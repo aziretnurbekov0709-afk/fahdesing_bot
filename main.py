@@ -6,15 +6,14 @@ bot = telebot.TeleBot(API_TOKEN)
 
 ADMIN_ID = 6498779131
 
-# храним кому отвечаем
 reply_dict = {}
-
 
 # 🚀 старт
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("🎨 Заказать дизайн", "📞 Помощь")
+    markup.add("🎨 Заказать дизайн")
+    markup.add("📞 Помощь", "🖼 Наши работы")
 
     bot.send_message(message.chat.id, "Добро пожаловать в FAH DESIGNERS 👑", reply_markup=markup)
 
@@ -30,7 +29,6 @@ def process_order(message):
     user = message.from_user
     username = f"@{user.username}" if user.username else "Без ника"
 
-    # кнопка ответить
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}")
     markup.add(btn)
@@ -78,7 +76,37 @@ def process_help(message):
     bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
 
 
-# 🔘 нажатие кнопки "Ответить"
+# 🖼 наши работы
+@bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
+def portfolio(message):
+
+    works = [
+        {"img": "work1.jpg", "text": "🔥 Киберпанк ник\n💰 300₽"},
+        {"img": "work2.jpg", "text": "🔥 Аватар\n💰 400₽"},
+        {"img": "work3.jpg", "text": "🔥 Превью\n💰 500₽"},
+    ]
+
+    for i, work in enumerate(works):
+        markup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton("🎨 Заказать такой", callback_data=f"order_{i}")
+        markup.add(btn)
+
+        bot.send_photo(
+            message.chat.id,
+            open(work["img"], "rb"),
+            caption=work["text"],
+            reply_markup=markup
+        )
+
+
+# 🎨 заказ с портфолио
+@bot.callback_query_handler(func=lambda call: call.data.startswith("order_"))
+def order_from_portfolio(call):
+    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали заказа:")
+    bot.register_next_step_handler(msg, process_order)
+
+
+# 🔘 кнопка "Ответить"
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
 def callback_reply(call):
     if call.from_user.id != ADMIN_ID:
@@ -101,5 +129,5 @@ def send_reply(message):
     del reply_dict[message.from_user.id]
 
 
-# 🔥 запуск
+# 🚀 запуск
 bot.infinity_polling()
