@@ -56,3 +56,4 @@ async def all_messages(message: types.Message):
 # ▶️ ЗАПУСК
 if name == 'main':
     executor.start_polling(dp, skip_updates=True)
+bot.polling()
