@@ -1,16 +1,19 @@
 import telebot
+from telebot import types
 
 API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 bot = telebot.TeleBot(API_TOKEN)
 
-# 👑 админ
 ADMIN_ID = 6498779131
+
+# храним кому отвечаем
+reply_dict = {}
 
 
 # 🚀 старт
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add("🎨 Заказать дизайн", "📞 Помощь")
 
     bot.send_message(message.chat.id, "Добро пожаловать в FAH DESIGNERS 👑", reply_markup=markup)
@@ -27,6 +30,11 @@ def process_order(message):
     user = message.from_user
     username = f"@{user.username}" if user.username else "Без ника"
 
+    # кнопка ответить
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}")
+    markup.add(btn)
+
     text = f"""
 📥 Новый ЗАКАЗ!
 
@@ -35,16 +43,13 @@ def process_order(message):
 
 📝 Заказ:
 {message.text}
-
-👉 Ответить:
-/reply {user.id} текст
 """
 
-    bot.send_message(ADMIN_ID, text)
+    bot.send_message(ADMIN_ID, text, reply_markup=markup)
     bot.send_message(message.chat.id, "✅ Заказ отправлен!")
 
 
-# 📞 помощь (ТЕПЕРЬ КАК ЗАКАЗ)
+# 📞 помощь
 @bot.message_handler(func=lambda m: m.text == "📞 Помощь")
 def help_request(message):
     msg = bot.send_message(message.chat.id, "Напиши свой вопрос:")
@@ -55,6 +60,10 @@ def process_help(message):
     user = message.from_user
     username = f"@{user.username}" if user.username else "Без ника"
 
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}")
+    markup.add(btn)
+
     text = f"""
 📞 НОВОЕ ОБРАЩЕНИЕ!
 
@@ -63,31 +72,33 @@ def process_help(message):
 
 💬 Сообщение:
 {message.text}
-
-👉 Ответить:
-/reply {user.id} текст
 """
 
-    bot.send_message(ADMIN_ID, text)
-    bot.send_message(message.chat.id, "✅ Сообщение отправлено админу!")
+    bot.send_message(ADMIN_ID, text, reply_markup=markup)
+    bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
 
 
-# 💬 ответ админа
-@bot.message_handler(commands=['reply'])
-def reply_to_user(message):
-    if message.from_user.id != ADMIN_ID:
+# 🔘 нажатие кнопки "Ответить"
+@bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
+def callback_reply(call):
+    if call.from_user.id != ADMIN_ID:
         return
 
-    try:
-        args = message.text.split(" ", 2)
-        user_id = int(args[1])
-        text = args[2]
+    user_id = int(call.data.split("_")[1])
+    reply_dict[call.from_user.id] = user_id
 
-        bot.send_message(user_id, f"💬 Ответ от администратора:\n\n{text}")
-        bot.send_message(message.chat.id, "✅ Отправлено")
+    bot.send_message(call.from_user.id, "✍️ Напиши ответ пользователю:")
 
-    except:
-        bot.send_message(message.chat.id, "❌ Пример: /reply 123456789 текст")
+
+# 💬 отправка ответа
+@bot.message_handler(func=lambda message: message.from_user.id in reply_dict)
+def send_reply(message):
+    user_id = reply_dict[message.from_user.id]
+
+    bot.send_message(user_id, f"💬 Ответ от администратора:\n\n{message.text}")
+    bot.send_message(message.chat.id, "✅ Ответ отправлен")
+
+    del reply_dict[message.from_user.id]
 
 
 # 🔥 запуск
