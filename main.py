@@ -1,5 +1,4 @@
-[18.03.2026 23:25] 𝘼𝙯𝙖 𝘿𝙚𝙨𝙞𝙜𝙣: pyTelegramBotAPI
-[19.03.2026 00:39] 𝘼𝙯𝙖 𝘿𝙚𝙨𝙞𝙜𝙣: import telebot
+ import telebot
 
 API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 
