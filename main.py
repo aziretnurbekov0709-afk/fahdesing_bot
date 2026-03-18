@@ -1,4 +1,4 @@
- import telebot
+import telebot
 
 API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 
