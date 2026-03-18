@@ -76,34 +76,10 @@ def process_help(message):
     bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
 
 
-# 🖼 наши работы
+# 🖼 наши работы (ПОКА ПУСТО)
 @bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
 def portfolio(message):
-
-    works = [
-        {"img": "work1.jpg", "text": "🔥 Киберпанк ник\n💰 300₽"},
-        {"img": "work2.jpg", "text": "🔥 Аватар\n💰 400₽"},
-        {"img": "work3.jpg", "text": "🔥 Превью\n💰 500₽"},
-    ]
-
-    for i, work in enumerate(works):
-        markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton("🎨 Заказать такой", callback_data=f"order_{i}")
-        markup.add(btn)
-
-        bot.send_photo(
-            message.chat.id,
-            open(work["img"], "rb"),
-            caption=work["text"],
-            reply_markup=markup
-        )
-
-
-# 🎨 заказ с портфолио
-@bot.callback_query_handler(func=lambda call: call.data.startswith("order_"))
-def order_from_portfolio(call):
-    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали заказа:")
-    bot.register_next_step_handler(msg, process_order)
+    bot.send_message(message.chat.id, "Скоро добавим работы 🔥")
 
 
 # 🔘 кнопка "Ответить"
@@ -127,6 +103,13 @@ def send_reply(message):
     bot.send_message(message.chat.id, "✅ Ответ отправлен")
 
     del reply_dict[message.from_user.id]
+
+
+# 🔥 ЛОВИМ PHOTO ID
+@bot.message_handler(content_types=['photo'])
+def get_photo_id(message):
+    file_id = message.photo[-1].file_id
+    bot.send_message(message.chat.id, f"ID фото:\n{file_id}")
 
 
 # 🚀 запуск
