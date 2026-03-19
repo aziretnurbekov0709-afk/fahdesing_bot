@@ -1,150 +1,147 @@
 import telebot
 from telebot import types
 
-API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
-bot = telebot.TeleBot(API_TOKEN)
+bot = telebot.TeleBot("8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM")
 
 ADMIN_ID = 6498779131
 PREVIEW_ADMIN = 7299702298
 VIDEO_ADMIN = 6034730945
 
-reply_dict = {}
+reply_mode = {}
+give_mode = {}
+
 orders = {}
 users = {}
-order_history = {}
+history = {}
+reviews = []
 
-# 🖼 ПРЕВЬЮ
+# ===== РАБОТЫ =====
 PREVIEW_WORKS = [
-    "AgACAgIAAxkBAAICwmm8RUJeGjWegRvmdyKF9Q6B8MruAAJ2EWsbH6rgSRbRjfLboF-EAQADAgADeQADOgQ",
-    "AgACAgIAAxkBAAICwWm8RUI8aqXrLjoODXZ4LDlvIhHVAAJ1EWsbH6rgSQL8ts1pj65-AQADAgADeQADOgQ"
+"AgACAgIAAxkBAAICwmm8RUJeGjWegRvmdyKF9Q6B8MruAAJ2EWsbH6rgSRbRjfLboF-EAQADAgADeQADOgQ"
 ]
 
-# 🎥 ВИДЕО
 VIDEO_WORKS = [
-    "BAACAgIAAxkBAAIC0mm8Rekw5ukwWBFVAyco8zW3j72ZAAKWlQACaK_hSXIxxtYbLvLpOgQ",
-    "BAACAgIAAxkBAAIC0Wm8RekpxUww7uiHYY7L8Ag__mdxAAKVlQACaK_hSfXjbhFTV4RrOgQ"
+"BAACAgIAAxkBAAIC0mm8Rekw5ukwWBFVAyco8zW3j72ZAAKWlQACaK_hSXIxxtYbLvLpOgQ"
 ]
 
-# 💳 КАРТОЧКИ
 CARD_WORKS = [
-    "AgACAgIAAxkBAAIC1mm8Rip2nbtbWZlhvSwnOHRTgWKSAALHEWsbiQzoSR8BlDvXLE5GAQADAgADeQADOgQ",
-    "AgACAgIAAxkBAAIC1Wm8RiolwMBtr0gjBKs_qmXLcQToAAJMEmsbX7bQSTr_kz7qzyS6AQADAgADeQADOgQ"
+"AgACAgIAAxkBAAIC1mm8Rip2nbtbWZlhvSwnOHRTgWKSAALHEWsbiQzoSR8BlDvXLE5GAQADAgADeQADOgQ"
 ]
 
-
-# 🚀 СТАРТ
+# ===== СТАРТ =====
 @bot.message_handler(commands=['start'])
-def start(message):
-    users[message.from_user.id] = message.from_user.username
+def start(m):
+    users[m.from_user.id] = m.from_user.username
 
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("🎨 Заказать дизайн")
-    markup.add("🤖 Бот / Сайт / Игра", "🎬 ИИ Видео / Монтаж")
-    markup.add("🎥 Превью YouTube")
-    markup.add("💳 Заказать карточку")
-    markup.add("🖼 Работы превью", "🎥 Работы видео")
-    markup.add("💳 Работы карточки")
-    markup.add("📊 Статус заказа", "🧾 История заказов")
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("📂 Работы")
+    kb.add("🎨 Заказать дизайн", "🎬 Видео/Монтаж")
+    kb.add("🎥 Превью", "💳 Карточка")
+    kb.add("📊 Статус", "🧾 История")
+    kb.add("⭐ Отзывы")
 
-    if message.from_user.id == ADMIN_ID:
-        markup.add("📦 Отдать заказ", "📋 Список заказов")
+    if m.from_user.id == ADMIN_ID:
+        kb.add("📦 Отдать заказ", "📋 Заказы")
 
-    bot.send_message(message.chat.id, "FAAAHHH DESIGNERS 👑", reply_markup=markup)
+    bot.send_message(m.chat.id, "FAAAHHH DESIGNERS 👑", reply_markup=kb)
 
+# ===== РАБОТЫ =====
+@bot.message_handler(func=lambda m: m.text == "📂 Работы")
+def works(m):
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("🎥 Превью работы", "🎬 Видео работы")
+    kb.add("💳 Карточки", "🔙 Назад")
+    bot.send_message(m.chat.id, "Выбери:", reply_markup=kb)
 
-# 📤 ЗАКАЗ
-def send_order(message, target_id, category):
-    user = message.from_user
-    username = f"@{user.username}" if user.username else "Без ника"
-
-    users[user.id] = user.username
-    orders[user.id] = "⏳ Ожидайте"
-
-    if user.id not in order_history:
-        order_history[user.id] = []
-
-    order_history[user.id].append(f"{category}: {message.text}")
-
-    markup = types.InlineKeyboardMarkup()
-    markup.add(
-        types.InlineKeyboardButton("✅ Принять", callback_data=f"accept_{user.id}"),
-        types.InlineKeyboardButton("❌ Отказать", callback_data=f"decline_{user.id}")
-    )
-    markup.add(types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}"))
-
-    bot.send_message(target_id, f"""
-📥 Новый заказ ({category})
-
-👤 {username}
-🆔 {user.id}
-
-📝 {message.text}
-
-📊 Статус: ⏳ Ожидайте
-""", reply_markup=markup)
-
-    bot.send_message(message.chat.id, "✅ Заказ отправлен!")
-
-
-# КНОПКИ ЗАКАЗА
-def ask(message, text, admin, category):
-    msg = bot.send_message(message.chat.id, "Опиши заказ и спросите цену!")
-    bot.register_next_step_handler(msg, lambda m: send_order(m, admin, category))
-
-
-@bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
-def design(m): ask(m, "", ADMIN_ID, "Дизайн")
-
-@bot.message_handler(func=lambda m: m.text == "💳 Заказать карточку")
-def card(m): ask(m, "", ADMIN_ID, "Карточка")
-
-@bot.message_handler(func=lambda m: m.text == "🎬 ИИ Видео / Монтаж")
-def video(m): ask(m, "", VIDEO_ADMIN, "Видео")
-
-@bot.message_handler(func=lambda m: m.text == "🎥 Превью YouTube")
-def preview(m): ask(m, "", PREVIEW_ADMIN, "Превью")
-
-
-# 🖼 РАБОТЫ
-@bot.message_handler(func=lambda m: m.text == "🖼 Работы превью")
-def show_preview(m):
+@bot.message_handler(func=lambda m: m.text == "🎥 Превью работы")
+def pw(m):
     for p in PREVIEW_WORKS:
         bot.send_photo(m.chat.id, p)
 
-@bot.message_handler(func=lambda m: m.text == "🎥 Работы видео")
-def show_video(m):
+@bot.message_handler(func=lambda m: m.text == "🎬 Видео работы")
+def vw(m):
     for v in VIDEO_WORKS:
         bot.send_video(m.chat.id, v)
 
-@bot.message_handler(func=lambda m: m.text == "💳 Работы карточки")
-def show_card(m):
+@bot.message_handler(func=lambda m: m.text == "💳 Карточки")
+def cw(m):
     for c in CARD_WORKS:
         bot.send_photo(m.chat.id, c)
 
+@bot.message_handler(func=lambda m: m.text == "🔙 Назад")
+def back(m):
+    start(m)
 
-# 📊 СТАТУС
-@bot.message_handler(func=lambda m: m.text == "📊 Статус заказа")
-def status(m):
+# ===== ЗАКАЗ =====
+def send_order(m, admin, cat):
+    u = m.from_user
+    users[u.id] = u.username
+
+    orders[u.id] = "⏳ Ожидается"
+    history.setdefault(u.id, []).append(f"{cat}: {m.text}")
+
+    kb = types.InlineKeyboardMarkup()
+    kb.add(
+        types.InlineKeyboardButton("✅", callback_data=f"acc_{u.id}"),
+        types.InlineKeyboardButton("❌", callback_data=f"dec_{u.id}")
+    )
+    kb.add(types.InlineKeyboardButton("💬 Ответ", callback_data=f"rep_{u.id}"))
+
+    bot.send_message(admin, f"Заказ {cat}\n@{u.username}\n{m.text}", reply_markup=kb)
+    bot.send_message(m.chat.id, "✅ Отправлено")
+
+def ask(m, admin, cat):
+    msg = bot.send_message(m.chat.id, "Опиши заказ и спросите цену!")
+    bot.register_next_step_handler(msg, lambda x: send_order(x, admin, cat))
+
+@bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
+def d(m): ask(m, ADMIN_ID, "Дизайн")
+
+@bot.message_handler(func=lambda m: m.text == "🎬 Видео/Монтаж")
+def v(m): ask(m, VIDEO_ADMIN, "Видео")
+
+@bot.message_handler(func=lambda m: m.text == "🎥 Превью")
+def p(m): ask(m, PREVIEW_ADMIN, "Превью")
+
+@bot.message_handler(func=lambda m: m.text == "💳 Карточка")
+def c(m): ask(m, ADMIN_ID, "Карточка")
+
+# ===== СТАТУС =====
+@bot.message_handler(func=lambda m: m.text == "📊 Статус")
+def st(m):
     bot.send_message(m.chat.id, orders.get(m.from_user.id, "❌ Нет заказа"))
 
+# ===== ИСТОРИЯ =====
+@bot.message_handler(func=lambda m: m.text == "🧾 История")
+def hs(m):
+    h = history.get(m.from_user.id)
+    bot.send_message(m.chat.id, "\n".join(h) if h else "Пусто")
 
-# 🧾 ИСТОРИЯ
-@bot.message_handler(func=lambda m: m.text == "🧾 История заказов")
-def history(m):
-    hist = order_history.get(m.from_user.id)
-    if not hist:
-        bot.send_message(m.chat.id, "❌ История пустая")
-        return
+# ===== ОТЗЫВЫ =====
+@bot.message_handler(func=lambda m: m.text == "⭐ Отзывы")
+def rev_menu(m):
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("✍️ Оставить отзыв", "📖 Смотреть отзывы", "🔙 Назад")
+    bot.send_message(m.chat.id, "Отзывы:", reply_markup=kb)
 
-    text = "🧾 Твои заказы:\n\n"
-    for i, h in enumerate(hist, 1):
-        text += f"{i}. {h}\n"
+@bot.message_handler(func=lambda m: m.text == "✍️ Оставить отзыв")
+def add_rev(m):
+    msg = bot.send_message(m.chat.id, "Напиши отзыв:")
+    bot.register_next_step_handler(msg, save_rev)
 
-    bot.send_message(m.chat.id, text)
+def save_rev(m):
+    reviews.append(f"@{m.from_user.username}: {m.text}")
+    bot.send_message(m.chat.id, "✅ Сохранено")
 
+@bot.message_handler(func=lambda m: m.text == "📖 Смотреть отзывы")
+def show_rev(m):
+    if not reviews:
+        bot.send_message(m.chat.id, "Нет отзывов")
+    else:
+        bot.send_message(m.chat.id, "\n\n".join(reviews))
 
-# 📋 АДМИН СПИСОК
-@bot.message_handler(func=lambda m: m.text == "📋 Список заказов")
+# ===== АДМИН СПИСОК =====
+@bot.message_handler(func=lambda m: m.text == "📋 Заказы")
 def admin_orders(m):
     if m.from_user.id != ADMIN_ID:
         return
@@ -153,83 +150,79 @@ def admin_orders(m):
         bot.send_message(m.chat.id, "❌ Нет заказов")
         return
 
-    text = "📋 Заказы:\n\n"
-    for uid, st in orders.items():
-        text += f"{users.get(uid)} | {uid}\n{st}\n\n"
+    text = ""
+    for uid, status in orders.items():
+        name = users.get(uid) or uid
+        text += f"👤 {name} | {uid}\n📊 {status}\n\n"
 
     bot.send_message(m.chat.id, text)
 
-
-# ✅ / ❌
-@bot.callback_query_handler(func=lambda c: c.data.startswith("accept_"))
-def accept(c):
+# ===== CALLBACK =====
+@bot.callback_query_handler(func=lambda c: c.data.startswith("acc_"))
+def acc(c):
     uid = int(c.data.split("_")[1])
-    orders[uid] = "✅ Принято, ожидайте"
+    orders[uid] = "✅ Принято"
     bot.send_message(uid, "✅ Принято")
 
-@bot.callback_query_handler(func=lambda c: c.data.startswith("decline_"))
-def decline(c):
+@bot.callback_query_handler(func=lambda c: c.data.startswith("dec_"))
+def dec(c):
     uid = int(c.data.split("_")[1])
     orders[uid] = "❌ Отменено"
     bot.send_message(uid, "❌ Отменено")
 
-
-# 💬 ОТВЕТ
-@bot.callback_query_handler(func=lambda c: c.data.startswith("reply_"))
-def reply(c):
+@bot.callback_query_handler(func=lambda c: c.data.startswith("rep_"))
+def rep(c):
     uid = int(c.data.split("_")[1])
-    reply_dict[c.from_user.id] = uid
-    bot.send_message(c.from_user.id, "Отправь сообщение/фото/видео")
+    reply_mode[c.from_user.id] = uid
+    bot.send_message(c.from_user.id, "Ответь пользователю")
 
-
-@bot.message_handler(content_types=['text', 'photo', 'video'])
-def reply_send(m):
-    if m.from_user.id in reply_dict:
-        uid = reply_dict[m.from_user.id]
-
-        if m.text:
-            bot.send_message(uid, f"💬 Админ:\n{m.text}")
-        elif m.photo:
-            bot.send_photo(uid, m.photo[-1].file_id)
-        elif m.video:
-            bot.send_video(uid, m.video.file_id)
-
-        del reply_dict[m.from_user.id]
-
-
-# 📦 ОТДАТЬ ЗАКАЗ
+# ===== ОТДАТЬ =====
 @bot.message_handler(func=lambda m: m.text == "📦 Отдать заказ")
 def give(m):
     if m.from_user.id != ADMIN_ID:
         return
 
-    markup = types.InlineKeyboardMarkup()
-    for uid in users:
-        name = users[uid] if users[uid] else uid
-        markup.add(types.InlineKeyboardButton(str(name), callback_data=f"give_{uid}"))
+    kb = types.InlineKeyboardMarkup()
+    for uid, name in users.items():
+        kb.add(types.InlineKeyboardButton(f"@{name}" if name else uid, callback_data=f"give_{uid}"))
 
-    bot.send_message(m.chat.id, "Выбери пользователя:", reply_markup=markup)
-
+    bot.send_message(m.chat.id, "Выбери:", reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith("give_"))
-def choose(c):
+def give_user(c):
     uid = int(c.data.split("_")[1])
-    reply_dict[c.from_user.id] = uid
-    bot.send_message(c.from_user.id, "Отправь фото/видео заказа")
+    give_mode[c.from_user.id] = uid
+    bot.send_message(c.from_user.id, "Отправь заказ")
 
+# ===== ОБРАБОТКА =====
+@bot.message_handler(content_types=['text','photo','video'])
+def all(m):
 
-@bot.message_handler(content_types=['photo', 'video'])
-def send_done(m):
-    if m.from_user.id in reply_dict:
-        uid = reply_dict[m.from_user.id]
+    if m.from_user.id in reply_mode:
+        uid = reply_mode[m.from_user.id]
+
+        if m.text:
+            bot.send_message(uid, m.text)
+        elif m.photo:
+            bot.send_photo(uid, m.photo[-1].file_id)
+        elif m.video:
+            bot.send_video(uid, m.video.file_id)
+
+        del reply_mode[m.from_user.id]
+        return
+
+    if m.from_user.id in give_mode:
+        uid = give_mode[m.from_user.id]
 
         if m.photo:
-            bot.send_photo(uid, m.photo[-1].file_id, caption="✅ Заказ готов")
+            bot.send_photo(uid, m.photo[-1].file_id, caption="✅ Готово")
         elif m.video:
-            bot.send_video(uid, m.video.file_id, caption="✅ Заказ готов")
+            bot.send_video(uid, m.video.file_id, caption="✅ Готово")
+        elif m.text:
+            bot.send_message(uid, "✅ Готово\n" + m.text)
 
         orders[uid] = "✅ Готов"
-        del reply_dict[m.from_user.id]
-
+        del give_mode[m.from_user.id]
+        return
 
 bot.infinity_polling()
