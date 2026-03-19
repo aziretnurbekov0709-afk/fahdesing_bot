@@ -46,6 +46,7 @@ def start(message):
     markup.add("🎨 Заказать дизайн")
     markup.add("🤖 Бот / Сайт / Игра", "🎬 ИИ Видео / Монтаж")
     markup.add("🎥 Превью YouTube")
+    markup.add("💳 Заказать карточку")  # 👈 добавили
     markup.add("🖼 Работы превью", "🎥 Работы видео")
     markup.add("💳 Работы карточки")
     markup.add("📊 Статус заказа", "⭐ Отзыв")
@@ -80,46 +81,53 @@ def send_order(message, target_id, category):
 # 🎨
 @bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
 def design(message):
-    msg = bot.send_message(message.chat.id, "Опиши дизайн:")
+    msg = bot.send_message(message.chat.id, "Опиши заказ и спросите цену!")
     bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Дизайн"))
 
 
 # 🤖
 @bot.message_handler(func=lambda m: m.text == "🤖 Бот / Сайт / Игра")
 def bot_site(message):
-    msg = bot.send_message(message.chat.id, "Опиши проект:")
+    msg = bot.send_message(message.chat.id, "Опиши заказ и спросите цену!")
     bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Бот/Сайт/Игра"))
 
 
 # 🎬
 @bot.message_handler(func=lambda m: m.text == "🎬 ИИ Видео / Монтаж")
 def video(message):
-    msg = bot.send_message(message.chat.id, "Опиши монтаж:")
+    msg = bot.send_message(message.chat.id, "Опиши заказ и спросите цену!")
     bot.register_next_step_handler(msg, lambda m: send_order(m, VIDEO_ADMIN, "Монтаж"))
 
 
-# 🎥 ПРЕВЬЮ ЗАКАЗ
+# 🎥
 @bot.message_handler(func=lambda m: m.text == "🎥 Превью YouTube")
 def preview(message):
-    msg = bot.send_message(message.chat.id, "Опиши превью:")
+    msg = bot.send_message(message.chat.id, "Опиши заказ и спросите цену!")
     bot.register_next_step_handler(msg, lambda m: send_order(m, PREVIEW_ADMIN, "Превью"))
 
 
-# 🖼 ПОКАЗ ПРЕВЬЮ
+# 💳 КАРТОЧКА
+@bot.message_handler(func=lambda m: m.text == "💳 Заказать карточку")
+def card(message):
+    msg = bot.send_message(message.chat.id, "Опиши заказ и спросите цену!")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Карточка"))
+
+
+# 🖼 ПРЕВЬЮ РАБОТЫ
 @bot.message_handler(func=lambda m: m.text == "🖼 Работы превью")
 def preview_works(message):
     for file_id, text in PREVIEW_WORKS:
         bot.send_photo(message.chat.id, file_id, caption=text)
 
 
-# 🎥 ПОКАЗ ВИДЕО
+# 🎥 ВИДЕО РАБОТЫ
 @bot.message_handler(func=lambda m: m.text == "🎥 Работы видео")
 def video_works(message):
     for file_id, text in VIDEO_WORKS:
         bot.send_video(message.chat.id, file_id, caption=text)
 
 
-# 💳 ПОКАЗ КАРТОЧЕК
+# 💳 КАРТОЧКИ РАБОТЫ
 @bot.message_handler(func=lambda m: m.text == "💳 Работы карточки")
 def card_works(message):
     for file_id, text in CARD_WORKS:
@@ -147,7 +155,7 @@ def save_review(message):
     del reviews_wait[message.from_user.id]
 
 
-# 💬 ОТВЕТ
+# 💬 ОТВЕТ АДМИНА
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
 def reply(call):
     user_id = int(call.data.split("_")[1])
