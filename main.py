@@ -1,7 +1,7 @@
 import telebot
 from telebot import types
 
-API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
+API_TOKEN = "8751703487:AAE2LU8EhNYt0cJ6r5Qt2D4u3w1vyDXf2W0"
 bot = telebot.TeleBot(API_TOKEN)
 
 # 👑 главный
@@ -13,7 +13,17 @@ VIDEO_ADMIN = 6034730945
 
 reply_dict = {}
 
-# 🖼 превью работы
+# 🖼 ОБЩИЕ РАБОТЫ (вчерашние)
+WORKS = [
+    ("AgACAgIAAxkBAAIBA2m6_cw-2NWOdv9-himqbG36O9FlAALqFmsbf4jQSUtF5w_1LyAEAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+    ("AgACAgIAAxkBAAIBBWm6_czZu0w68bV1MyHgWxB7Kk66AAJBG2sbV4LZSeER3otALILhAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+    ("AgACAgIAAxkBAAIBF2m6_xUx2biENKxmqcRr7f1CRClZAAJAG2sbV4LZScTvjduSVZ5aAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+    ("AgACAgIAAxkBAAIBBmm6_cxR42RcIFZNHSCsv9qi8lssAAK1E2sb7SjJSbVbPCh9maHaAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+    ("AgACAgIAAxkBAAIBB2m6_czleDEqB1UCF7pjvDDQbsfEAAJCG2sbV4LZSeX-FxaWqgV-AQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+    ("AgACAgIAAxkBAAIBCGm6_czT5XltjwvGbnez4Yi1Lq_5AAJrE2sbX7bIScCcPmXjejJcAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+]
+
+# 🎥 ПРЕВЬЮ РАБОТЫ
 PREVIEW_WORKS = [
     ("AgACAgIAAxkBAAMDabw93Fkfq06aZ3DKUCEdfeE19poAAnYRaxsfquBJ5gZiOfgmIMsBAAMCAAN5AAM6BA", "🔥 Превью 1"),
     ("AgACAgIAAxkBAAMCabw93J8px8B9VfJFVZRF3DFuu6cAAnURaxsfquBJIDvM2r0pjhQBAAMCAAN5AAM6BA", "🔥 Превью 2"),
@@ -33,18 +43,18 @@ def start(message):
     markup.add("🤖 Бот / Сайт / Игра", "🎬 ИИ Видео / Монтаж")
     markup.add("🎥 Превью YouTube", "🖼 Работы превью")
     markup.add("🪪 Визитка / Карточка")
+    markup.add("🖼 Наши работы")
 
     bot.send_message(message.chat.id, "FAH DESIGNERS 👑", reply_markup=markup)
 
 
-# 📤 функция отправки заказа
+# 📤 отправка заказа
 def send_order(message, target_id, category):
     user = message.from_user
     username = f"@{user.username}" if user.username else "Без ника"
 
     markup = types.InlineKeyboardMarkup()
-    btn = types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}")
-    markup.add(btn)
+    markup.add(types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}"))
 
     bot.send_message(target_id, f"""
 📥 Новый заказ ({category})
@@ -58,7 +68,7 @@ def send_order(message, target_id, category):
     bot.send_message(message.chat.id, "✅ Заказ отправлен!")
 
 
-# 🎨 обычный дизайн → тебе
+# 🎨 дизайн → тебе
 @bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
 def design(message):
     msg = bot.send_message(message.chat.id, "Опиши дизайн:")
@@ -93,18 +103,33 @@ def card(message):
     bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Визитка"))
 
 
-# 🖼 работы превью
-@bot.message_handler(func=lambda m: m.text == "🖼 Работы превью")
-def preview_works(message):
-    for file_id, text in PREVIEW_WORKS:
+# 🖼 ОБЩИЕ РАБОТЫ
+@bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
+def works(message):
+    for file_id, text in WORKS:
         markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton("🎥 Заказать такое", callback_data="order_preview")
-        markup.add(btn)
+        markup.add(types.InlineKeyboardButton("🎨 Заказать", callback_data="order_design"))
 
         bot.send_photo(message.chat.id, file_id, caption=text, reply_markup=markup)
 
 
-# заказ с превью
+# 🎥 ПРЕВЬЮ РАБОТЫ
+@bot.message_handler(func=lambda m: m.text == "🖼 Работы превью")
+def preview_works(message):
+    for file_id, text in PREVIEW_WORKS:
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("🎥 Заказать такое", callback_data="order_preview"))
+
+        bot.send_photo(message.chat.id, file_id, caption=text, reply_markup=markup)
+
+
+# кнопки заказа
+@bot.callback_query_handler(func=lambda call: call.data == "order_design")
+def order_design(call):
+    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Дизайн"))
+
+
 @bot.callback_query_handler(func=lambda call: call.data == "order_preview")
 def order_preview(call):
     msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали:")
@@ -129,5 +154,4 @@ def send_reply(message):
     del reply_dict[message.from_user.id]
 
 
-# 🚀 запуск
 bot.infinity_polling()
