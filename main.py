@@ -1,7 +1,7 @@
 import telebot
 from telebot import types
 
-API_TOKEN = "8751703487:AAE2LU8EhNYt0cJ6r5Qt2D4u3w1vyDXf2W0"
+API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 bot = telebot.TeleBot(API_TOKEN)
 
 # 👑 главный
@@ -12,29 +12,23 @@ PREVIEW_ADMIN = 7299702298
 VIDEO_ADMIN = 6034730945
 
 reply_dict = {}
+orders = {}
+reviews_wait = {}
 
-# 🖼 ОБЩИЕ РАБОТЫ (вчерашние)
+# 🖼 ОБЩИЕ РАБОТЫ
 WORKS = [
-    ("AgACAgIAAxkBAAIBA2m6_cw-2NWOdv9-himqbG36O9FlAALqFmsbf4jQSUtF5w_1LyAEAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBBWm6_czZu0w68bV1MyHgWxB7Kk66AAJBG2sbV4LZSeER3otALILhAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBF2m6_xUx2biENKxmqcRr7f1CRClZAAJAG2sbV4LZScTvjduSVZ5aAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBBmm6_cxR42RcIFZNHSCsv9qi8lssAAK1E2sb7SjJSbVbPCh9maHaAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBB2m6_czleDEqB1UCF7pjvDDQbsfEAAJCG2sbV4LZSeX-FxaWqgV-AQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBCGm6_czT5XltjwvGbnez4Yi1Lq_5AAJrE2sbX7bIScCcPmXjejJcAQADAgADeQADOgQ", "🔥 Дизайн\n💰 1000₽"),
+    ("AgACAgIAAxkBAAIBA2m6_cw-2NWOdv9-himqbG36O9FlAALqFmsbf4jQSUtF5w_1LyAEAQADAgADeQADOgQ", "🔥 Дизайн 1"),
+    ("AgACAgIAAxkBAAIBBWm6_czZu0w68bV1MyHgWxB7Kk66AAJBG2sbV4LZSeER3otALILhAQADAgADeQADOgQ", "🔥 Дизайн 2"),
 ]
 
 # 🎥 ПРЕВЬЮ РАБОТЫ
 PREVIEW_WORKS = [
     ("AgACAgIAAxkBAAMDabw93Fkfq06aZ3DKUCEdfeE19poAAnYRaxsfquBJ5gZiOfgmIMsBAAMCAAN5AAM6BA", "🔥 Превью 1"),
     ("AgACAgIAAxkBAAMCabw93J8px8B9VfJFVZRF3DFuu6cAAnURaxsfquBJIDvM2r0pjhQBAAMCAAN5AAM6BA", "🔥 Превью 2"),
-    ("AgACAgIAAxkBAAMEabw93Feo6etfWkHJ6fMkm1j3f6AAAncRaxsfquBJ2231ax8S070BAAMCAAN5AAM6BA", "🔥 Превью 3"),
-    ("AgACAgIAAxkBAAMFabw93KWdwnPMZ3Sh5IDyGOQ5dmkAAnkRaxsfquBJm_qNCstY7mMBAAMCAAN5AAM6BA", "🔥 Превью 4"),
-    ("AgACAgIAAxkBAAMGabw93MXy01Jke3bSC8Q7fQpOUq0AAnoRaxsfquBJNbr08s0QFMoBAAMCAAN5AAM6BA", "🔥 Превью 5"),
-    ("AgACAgIAAxkBAAMHabw93EJzduLx1R67BfkDu8SDwcoAAnsRaxsfquBJFGHgkKueF3sBAAMCAAN5AAM6BA", "🔥 Превью 6"),
 ]
 
 
-# 🚀 старт
+# 🚀 СТАРТ
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -44,14 +38,17 @@ def start(message):
     markup.add("🎥 Превью YouTube", "🖼 Работы превью")
     markup.add("🪪 Визитка / Карточка")
     markup.add("🖼 Наши работы")
+    markup.add("📊 Статус заказа", "⭐ Отзыв")
 
     bot.send_message(message.chat.id, "FAH DESIGNERS 👑", reply_markup=markup)
 
 
-# 📤 отправка заказа
+# 📤 ОТПРАВКА ЗАКАЗА
 def send_order(message, target_id, category):
     user = message.from_user
     username = f"@{user.username}" if user.username else "Без ника"
+
+    orders[user.id] = "⏳ В ожидании"
 
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}"))
@@ -63,12 +60,14 @@ def send_order(message, target_id, category):
 🆔 {user.id}
 
 📝 {message.text}
+
+📊 Статус: ⏳ В ожидании
 """, reply_markup=markup)
 
     bot.send_message(message.chat.id, "✅ Заказ отправлен!")
 
 
-# 🎨 дизайн → тебе
+# 🎨 ДИЗАЙН → тебе
 @bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
 def design(message):
     msg = bot.send_message(message.chat.id, "Опиши дизайн:")
@@ -107,36 +106,38 @@ def card(message):
 @bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
 def works(message):
     for file_id, text in WORKS:
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🎨 Заказать", callback_data="order_design"))
-
-        bot.send_photo(message.chat.id, file_id, caption=text, reply_markup=markup)
+        bot.send_photo(message.chat.id, file_id, caption=text)
 
 
 # 🎥 ПРЕВЬЮ РАБОТЫ
 @bot.message_handler(func=lambda m: m.text == "🖼 Работы превью")
 def preview_works(message):
     for file_id, text in PREVIEW_WORKS:
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🎥 Заказать такое", callback_data="order_preview"))
-
-        bot.send_photo(message.chat.id, file_id, caption=text, reply_markup=markup)
+        bot.send_photo(message.chat.id, file_id, caption=text)
 
 
-# кнопки заказа
-@bot.callback_query_handler(func=lambda call: call.data == "order_design")
-def order_design(call):
-    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали:")
-    bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Дизайн"))
+# 📊 СТАТУС
+@bot.message_handler(func=lambda m: m.text == "📊 Статус заказа")
+def status(message):
+    st = orders.get(message.from_user.id, "❌ Нет заказа")
+    bot.send_message(message.chat.id, f"📊 Статус:\n{st}")
 
 
-@bot.callback_query_handler(func=lambda call: call.data == "order_preview")
-def order_preview(call):
-    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали:")
-    bot.register_next_step_handler(msg, lambda m: send_order(m, PREVIEW_ADMIN, "Превью"))
+# ⭐ ОТЗЫВ
+@bot.message_handler(func=lambda m: m.text == "⭐ Отзыв")
+def review(message):
+    reviews_wait[message.from_user.id] = True
+    bot.send_message(message.chat.id, "Напиши отзыв:")
 
 
-# 💬 ответ
+@bot.message_handler(func=lambda m: m.from_user.id in reviews_wait)
+def save_review(message):
+    bot.send_message(ADMIN_ID, f"⭐ Отзыв:\n{message.text}")
+    bot.send_message(message.chat.id, "Спасибо ❤️")
+    del reviews_wait[message.from_user.id]
+
+
+# 💬 ОТВЕТ
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
 def reply(call):
     user_id = int(call.data.split("_")[1])
@@ -147,11 +148,9 @@ def reply(call):
 @bot.message_handler(func=lambda m: m.from_user.id in reply_dict)
 def send_reply(message):
     user_id = reply_dict[message.from_user.id]
-
-    bot.send_message(user_id, f"💬 Ответ:\n{message.text}")
-    bot.send_message(message.chat.id, "✅ Отправлено")
-
+    bot.send_message(user_id, f"💬 Админ:\n{message.text}")
     del reply_dict[message.from_user.id]
 
 
+# 🚀 ЗАПУСК
 bot.infinity_polling()
