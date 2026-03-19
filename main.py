@@ -4,38 +4,41 @@ from telebot import types
 API_TOKEN = "8739134919:AAH8csG0v-Y3MTHO6U_UREeq7byPy3LuNnM"
 bot = telebot.TeleBot(API_TOKEN)
 
+# 👑 главный
 ADMIN_ID = 6498779131
+
+# 👨‍🎨 исполнители
+PREVIEW_ADMIN = 7299702298
+VIDEO_ADMIN = 6034730945
 
 reply_dict = {}
 
-# 🖼 работы (цена 1000₽)
-WORKS = [
-    ("AgACAgIAAxkBAAIBA2m6_cw-2NWOdv9-himqbG36O9FlAALqFmsbf4jQSUtF5w_1LyAEAQADAgADeQADOgQ", "🔥 Дизайн 1\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBBWm6_czZu0w68bV1MyHgWxB7Kk66AAJBG2sbV4LZSeER3otALILhAQADAgADeQADOgQ", "🔥 Дизайн 2\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBF2m6_xUx2biENKxmqcRr7f1CRClZAAJAG2sbV4LZScTvjduSVZ5aAQADAgADeQADOgQ", "🔥 Дизайн 3\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBBmm6_cxR42RcIFZNHSCsv9qi8lssAAK1E2sb7SjJSbVbPCh9maHaAQADAgADeQADOgQ", "🔥 Дизайн 4\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBB2m6_czleDEqB1UCF7pjvDDQbsfEAAJCG2sbV4LZSeX-FxaWqgV-AQADAgADeQADOgQ", "🔥 Дизайн 5\n💰 1000₽"),
-    ("AgACAgIAAxkBAAIBCGm6_czT5XltjwvGbnez4Yi1Lq_5AAJrE2sbX7bIScCcPmXjejJcAQADAgADeQADOgQ", "🔥 Дизайн 6\n💰 1000₽"),
+# 🖼 превью работы
+PREVIEW_WORKS = [
+    ("AgACAgIAAxkBAAMDabw93Fkfq06aZ3DKUCEdfeE19poAAnYRaxsfquBJ5gZiOfgmIMsBAAMCAAN5AAM6BA", "🔥 Превью 1"),
+    ("AgACAgIAAxkBAAMCabw93J8px8B9VfJFVZRF3DFuu6cAAnURaxsfquBJIDvM2r0pjhQBAAMCAAN5AAM6BA", "🔥 Превью 2"),
+    ("AgACAgIAAxkBAAMEabw93Feo6etfWkHJ6fMkm1j3f6AAAncRaxsfquBJ2231ax8S070BAAMCAAN5AAM6BA", "🔥 Превью 3"),
+    ("AgACAgIAAxkBAAMFabw93KWdwnPMZ3Sh5IDyGOQ5dmkAAnkRaxsfquBJm_qNCstY7mMBAAMCAAN5AAM6BA", "🔥 Превью 4"),
+    ("AgACAgIAAxkBAAMGabw93MXy01Jke3bSC8Q7fQpOUq0AAnoRaxsfquBJNbr08s0QFMoBAAMCAAN5AAM6BA", "🔥 Превью 5"),
+    ("AgACAgIAAxkBAAMHabw93EJzduLx1R67BfkDu8SDwcoAAnsRaxsfquBJFGHgkKueF3sBAAMCAAN5AAM6BA", "🔥 Превью 6"),
 ]
+
 
 # 🚀 старт
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
     markup.add("🎨 Заказать дизайн")
-    markup.add("📞 Помощь", "🖼 Наши работы")
+    markup.add("🤖 Бот / Сайт / Игра", "🎬 ИИ Видео / Монтаж")
+    markup.add("🎥 Превью YouTube", "🖼 Работы превью")
+    markup.add("🪪 Визитка / Карточка")
 
-    bot.send_message(message.chat.id, "Добро пожаловать в FAH DESIGNERS 👑", reply_markup=markup)
-
-
-# 🎨 заказ
-@bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
-def order(message):
-    msg = bot.send_message(message.chat.id, "Опиши заказ:")
-    bot.register_next_step_handler(msg, process_order)
+    bot.send_message(message.chat.id, "FAH DESIGNERS 👑", reply_markup=markup)
 
 
-def process_order(message):
+# 📤 функция отправки заказа
+def send_order(message, target_id, category):
     user = message.from_user
     username = f"@{user.username}" if user.username else "Без ника"
 
@@ -43,86 +46,85 @@ def process_order(message):
     btn = types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}")
     markup.add(btn)
 
-    text = f"""
-📥 Новый ЗАКАЗ!
+    bot.send_message(target_id, f"""
+📥 Новый заказ ({category})
 
-👤 Ник: {username}
-🆔 ID: {user.id}
+👤 {username}
+🆔 {user.id}
 
-📝 Заказ:
-{message.text}
-"""
+📝 {message.text}
+""", reply_markup=markup)
 
-    bot.send_message(ADMIN_ID, text, reply_markup=markup)
     bot.send_message(message.chat.id, "✅ Заказ отправлен!")
 
 
-# 📞 помощь
-@bot.message_handler(func=lambda m: m.text == "📞 Помощь")
-def help_request(message):
-    msg = bot.send_message(message.chat.id, "Напиши свой вопрос:")
-    bot.register_next_step_handler(msg, process_help)
+# 🎨 обычный дизайн → тебе
+@bot.message_handler(func=lambda m: m.text == "🎨 Заказать дизайн")
+def design(message):
+    msg = bot.send_message(message.chat.id, "Опиши дизайн:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Дизайн"))
 
 
-def process_help(message):
-    user = message.from_user
-    username = f"@{user.username}" if user.username else "Без ника"
-
-    markup = types.InlineKeyboardMarkup()
-    btn = types.InlineKeyboardButton("💬 Ответить", callback_data=f"reply_{user.id}")
-    markup.add(btn)
-
-    text = f"""
-📞 НОВОЕ ОБРАЩЕНИЕ!
-
-👤 Ник: {username}
-🆔 ID: {user.id}
-
-💬 Сообщение:
-{message.text}
-"""
-
-    bot.send_message(ADMIN_ID, text, reply_markup=markup)
-    bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
+# 🤖 → тебе
+@bot.message_handler(func=lambda m: m.text == "🤖 Бот / Сайт / Игра")
+def bot_site(message):
+    msg = bot.send_message(message.chat.id, "Опиши проект:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Бот/Сайт/Игра"))
 
 
-# 🖼 работы
-@bot.message_handler(func=lambda m: m.text == "🖼 Наши работы")
-def portfolio(message):
-    for i, (file_id, text) in enumerate(WORKS):
+# 🎬 → монтажеру
+@bot.message_handler(func=lambda m: m.text == "🎬 ИИ Видео / Монтаж")
+def video(message):
+    msg = bot.send_message(message.chat.id, "Опиши монтаж:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, VIDEO_ADMIN, "Монтаж"))
+
+
+# 🎥 → превью дизайнеру
+@bot.message_handler(func=lambda m: m.text == "🎥 Превью YouTube")
+def preview(message):
+    msg = bot.send_message(message.chat.id, "Опиши превью:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, PREVIEW_ADMIN, "Превью"))
+
+
+# 🪪 → тебе
+@bot.message_handler(func=lambda m: m.text == "🪪 Визитка / Карточка")
+def card(message):
+    msg = bot.send_message(message.chat.id, "Опиши визитку:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, ADMIN_ID, "Визитка"))
+
+
+# 🖼 работы превью
+@bot.message_handler(func=lambda m: m.text == "🖼 Работы превью")
+def preview_works(message):
+    for file_id, text in PREVIEW_WORKS:
         markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton("🎨 Заказать такой", callback_data=f"order_{i}")
+        btn = types.InlineKeyboardButton("🎥 Заказать такое", callback_data="order_preview")
         markup.add(btn)
 
         bot.send_photo(message.chat.id, file_id, caption=text, reply_markup=markup)
 
 
-# 🎨 заказ с портфолио
-@bot.callback_query_handler(func=lambda call: call.data.startswith("order_"))
-def order_from_portfolio(call):
-    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали заказа:")
-    bot.register_next_step_handler(msg, process_order)
+# заказ с превью
+@bot.callback_query_handler(func=lambda call: call.data == "order_preview")
+def order_preview(call):
+    msg = bot.send_message(call.message.chat.id, "✍️ Напиши детали:")
+    bot.register_next_step_handler(msg, lambda m: send_order(m, PREVIEW_ADMIN, "Превью"))
 
 
-# 🔘 ответ админу
+# 💬 ответ
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reply_"))
-def callback_reply(call):
-    if call.from_user.id != ADMIN_ID:
-        return
-
+def reply(call):
     user_id = int(call.data.split("_")[1])
     reply_dict[call.from_user.id] = user_id
+    bot.send_message(call.from_user.id, "Напиши ответ:")
 
-    bot.send_message(call.from_user.id, "✍️ Напиши ответ пользователю:")
 
-
-# 💬 отправка ответа
-@bot.message_handler(func=lambda message: message.from_user.id in reply_dict)
+@bot.message_handler(func=lambda m: m.from_user.id in reply_dict)
 def send_reply(message):
     user_id = reply_dict[message.from_user.id]
 
-    bot.send_message(user_id, f"💬 Ответ от администратора:\n\n{message.text}")
-    bot.send_message(message.chat.id, "✅ Ответ отправлен")
+    bot.send_message(user_id, f"💬 Ответ:\n{message.text}")
+    bot.send_message(message.chat.id, "✅ Отправлено")
 
     del reply_dict[message.from_user.id]
 
