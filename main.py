@@ -254,6 +254,5 @@ def all(m):
         return
 
 # ===== ЗАПУСК =====
-bot.infinity_polling()
 
 bot.infinity_polling()
